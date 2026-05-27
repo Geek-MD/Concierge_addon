@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.2
+- Fixed add-on installation failure on Alpine by adding the native build toolchain and required development libraries in the image before installing Python dependencies.
+
 ## 0.2.1
 - Fixed add-on image build by switching `BUILD_FROM` to a valid multi-architecture Home Assistant base image (`ghcr.io/home-assistant/base-python:3.12-alpine3.22`) instead of the missing `amd64`-specific tag.
 

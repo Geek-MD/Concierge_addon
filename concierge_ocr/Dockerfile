@@ -4,7 +4,19 @@ FROM ${BUILD_FROM}
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
-RUN apk add --no-cache poppler-utils
+RUN apk add --no-cache \
+    poppler-utils \
+    build-base \
+    cmake \
+    ninja \
+    pkgconf \
+    python3-dev \
+    linux-headers \
+    gfortran \
+    openblas-dev \
+    lapack-dev \
+    freetype-dev \
+    libpng-dev
 
 COPY requirements.txt /app/requirements.txt
 RUN pip3 install --no-cache-dir -r /app/requirements.txt
