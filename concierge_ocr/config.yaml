@@ -1,19 +1,27 @@
 name: Concierge OCR API
-version: "0.1.0"
+version: "0.2.0"
 slug: concierge_ocr
 url: "https://github.com/Geek-MD/Concierge_addon"
-description: OCR de documentos PDF vía REST API usando PaddleOCR para la integración Concierge_HA_Integration.
+description: PDF document OCR over REST API using PaddleOCR for the Concierge_HA_Integration integration.
 startup: services
 boot: auto
 init: false
+ingress: true
+ingress_port: 8099
+panel_icon: mdi:file-document-outline
+panel_title: Concierge OCR
 arch:
   - amd64
   - aarch64
   - armv7
+map:
+  - config:ro
+  - share:ro
+  - media:ro
 ports:
   8099/tcp: 8099
 ports_description:
-  8099/tcp: API REST para OCR PDF
+  8099/tcp: REST API for PDF OCR
 options:
   ocr_lang: es
 schema:
