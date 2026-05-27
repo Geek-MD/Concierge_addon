@@ -1,6 +1,6 @@
 # Concierge_addon
 
-Addon para Home Assistant que expone una API REST para recibir un PDF, ejecutar OCR con PaddleOCR y devolver el resultado en JSON.
+Addon para Home Assistant que expone una API REST y una Web UI para analizar PDFs con PaddleOCR y devolver el resultado en JSON.
 
 ## Estructura
 
@@ -10,14 +10,24 @@ Addon para Home Assistant que expone una API REST para recibir un PDF, ejecutar 
   - `Dockerfile`: imagen del addon.
   - `run.sh`: arranque de la API.
   - `requirements.txt`: dependencias Python.
-  - `app/main.py`: API REST (`/health` y `/ocr`).
+  - `app/main.py`: API REST (`/health`, `/ocr`, `/ocr/source`) y Web UI (`/`).
 
 ## Uso
 
 1. Añade este repositorio como **Add-on repository** en Home Assistant.
 2. Instala el addon **Concierge OCR API**.
-3. Inicia el addon (puerto `8099`).
-4. Envía un PDF por REST:
+3. Inicia el addon.
+4. Abre la Web UI desde la pantalla del addon (si habilitas **Show in sidebar** aparecerá en el panel lateral).
+5. Ingresa:
+   - una URL (`http/https`) de un PDF, o
+   - una ruta local en Home Assistant (`/config`, `/share`, `/media`).
+6. Ejecuta el análisis y descarga el JSON si lo necesitas.
+
+## API REST
+
+### `POST /ocr`
+
+Envía un PDF por REST:
 
 ```bash
 curl -X POST "http://HOME_ASSISTANT_HOST:8099/ocr" \
@@ -47,3 +57,10 @@ Respuesta ejemplo:
   "text": "Hola mundo"
 }
 ```
+
+### `POST /ocr/source`
+
+Permite procesar el PDF desde origen remoto o local:
+
+- `source_type=url` y `source_value=https://.../archivo.pdf`
+- `source_type=local_path` y `source_value=/config/archivo.pdf`

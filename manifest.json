@@ -1,6 +1,6 @@
 {
   "name": "Concierge OCR Addon",
-  "version": "0.1.0",
-  "description": "Home Assistant addon para OCR de PDFs vía REST con PaddleOCR.",
+  "version": "0.2.0",
+  "description": "Home Assistant addon para OCR de PDFs vía REST y Web UI con PaddleOCR.",
   "repository": "https://github.com/Geek-MD/Concierge_addon"
 }
