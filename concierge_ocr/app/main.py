@@ -44,7 +44,7 @@ def health() -> dict[str, str]:
 @app.post("/ocr")
 async def ocr_pdf(request: Request, file: UploadFile | None = File(default=None)) -> dict[str, Any]:
     if file is not None:
-        if not file.filename.lower().endswith(".pdf"):
+        if not file.filename or not file.filename.lower().endswith(".pdf"):
             raise HTTPException(status_code=400, detail="El archivo debe ser PDF")
         pdf_bytes = await file.read()
     else:
