@@ -1,4 +1,4 @@
-# Concierge_addon
+# Concierge addon
 
 Addon para Home Assistant que expone una API REST para recibir un PDF, ejecutar OCR con PaddleOCR y devolver el resultado en JSON.
 
