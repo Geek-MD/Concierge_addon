@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.1
+- Fixed add-on image build by switching `BUILD_FROM` to a valid multi-architecture Home Assistant base image (`ghcr.io/home-assistant/base-python:3.12-alpine3.22`) instead of the missing `amd64`-specific tag.
+
 ## 0.2.0
 - Added a Web UI at `/` to analyze PDFs from a URL or a local Home Assistant path.
 - Added a new `POST /ocr/source` route to process PDFs using `source_type` (`url` or `local_path`) and `source_value`.

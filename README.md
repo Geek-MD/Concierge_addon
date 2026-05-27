@@ -2,6 +2,10 @@
 
 Home Assistant add-on that exposes a REST API and a Web UI to analyze PDFs with PaddleOCR and return the result as JSON.
 
+## Compatibility note
+
+The add-on Docker image now uses the multi-architecture Home Assistant Python base image (`ghcr.io/home-assistant/base-python:3.12-alpine3.22`) instead of an `amd64`-specific tag.
+
 ## Structure
 
 - `repository.yaml`: add-on repository metadata.
