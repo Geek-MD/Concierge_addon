@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.1
+- Fixed add-on image build by removing the hardcoded `amd64` default from `BUILD_FROM` in the Dockerfile, allowing Home Assistant Supervisor to inject the correct architecture-specific base image.
+
 ## 0.2.0
 - Added a Web UI at `/` to analyze PDFs from a URL or a local Home Assistant path.
 - Added a new `POST /ocr/source` route to process PDFs using `source_type` (`url` or `local_path`) and `source_value`.

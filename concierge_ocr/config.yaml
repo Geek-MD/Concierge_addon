@@ -1,5 +1,5 @@
 name: Concierge OCR API
-version: "0.2.0"
+version: "0.2.1"
 slug: concierge_ocr
 url: "https://github.com/Geek-MD/Concierge_addon"
 description: PDF document OCR over REST API using PaddleOCR for the Concierge_HA_Integration integration.
