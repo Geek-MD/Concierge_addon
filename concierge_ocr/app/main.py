@@ -1,4 +1,6 @@
+import ipaddress
 import os
+import socket
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -14,7 +16,10 @@ from paddleocr import PaddleOCR
 app = FastAPI(title="Concierge OCR API", version="0.2.0")
 
 _OCR_INSTANCE: PaddleOCR | None = None
-LOCAL_PDF_BASE_PATHS = tuple(Path(path) for path in os.getenv("LOCAL_PDF_BASE_PATHS", "/config,/share,/media").split(","))
+LOCAL_ALLOWED_BASE_DIRS = tuple(Path(path) for path in os.getenv("LOCAL_PDF_BASE_PATHS", "/config,/share,/media").split(","))
+RESOLVED_LOCAL_BASE_DIRS = tuple(
+    path.expanduser().resolve() for path in LOCAL_ALLOWED_BASE_DIRS if path.expanduser().exists()
+)
 
 WEB_UI_HTML = """<!doctype html>
 <html lang="es">
@@ -132,7 +137,42 @@ def _extract_page_lines(ocr_result: Any) -> list[dict[str, Any]]:
 
 
 def _is_pdf_bytes(pdf_bytes: bytes) -> bool:
-    return pdf_bytes.lstrip().startswith(b"%PDF")
+    return pdf_bytes.startswith(b"%PDF")
+
+
+def _is_public_http_url(pdf_url: str) -> bool:
+    parsed = urlparse(pdf_url)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        return False
+    if parsed.username or parsed.password:
+        return False
+    if parsed.hostname.lower() == "localhost":
+        return False
+    if parsed.port and parsed.port not in {80, 443}:
+        return False
+
+    try:
+        resolved = socket.getaddrinfo(parsed.hostname, parsed.port or 443, type=socket.SOCK_STREAM)
+    except OSError:
+        return False
+
+    for entry in resolved:
+        raw_ip = entry[4][0]
+        try:
+            ip = ipaddress.ip_address(raw_ip)
+        except ValueError:
+            return False
+        if (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_multicast
+            or ip.is_reserved
+            or ip.is_unspecified
+        ):
+            return False
+
+    return True
 
 
 def _validate_local_pdf_path(local_path: str) -> Path:
@@ -152,14 +192,12 @@ def _validate_local_pdf_path(local_path: str) -> Path:
     if resolved_path.suffix.lower() != ".pdf":
         raise HTTPException(status_code=400, detail="La ruta local debe ser un archivo PDF")
 
-    allowed_bases: list[Path] = []
-    for base in LOCAL_PDF_BASE_PATHS:
-        expanded_base = base.expanduser()
-        if expanded_base.exists():
-            allowed_bases.append(expanded_base.resolve())
+    if not RESOLVED_LOCAL_BASE_DIRS:
+        raise HTTPException(status_code=500, detail="No hay rutas locales permitidas configuradas")
 
-    if allowed_bases and not any(
-        resolved_path == base or base in resolved_path.parents for base in allowed_bases
+    resolved_path_text = str(resolved_path)
+    if not any(
+        resolved_path_text.startswith(f"{str(base).rstrip('/')}/") for base in RESOLVED_LOCAL_BASE_DIRS
     ):
         raise HTTPException(status_code=403, detail="La ruta local no está permitida")
 
@@ -167,9 +205,8 @@ def _validate_local_pdf_path(local_path: str) -> Path:
 
 
 async def _fetch_pdf_from_url(pdf_url: str) -> bytes:
-    parsed = urlparse(pdf_url)
-    if parsed.scheme not in {"http", "https"}:
-        raise HTTPException(status_code=400, detail="La URL debe usar http o https")
+    if not _is_public_http_url(pdf_url):
+        raise HTTPException(status_code=400, detail="La URL no es válida o segura para descarga")
 
     try:
         async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
