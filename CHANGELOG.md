@@ -1,7 +1,7 @@
 # Changelog
 
 ## 0.2.1
-- Fixed add-on image build by removing the hardcoded `amd64` default from `BUILD_FROM` in the Dockerfile, allowing Home Assistant Supervisor to inject the correct architecture-specific base image.
+- Fixed add-on image build by switching `BUILD_FROM` to a valid multi-architecture Home Assistant base image (`ghcr.io/home-assistant/base-python:3.12-alpine3.22`) instead of the missing `amd64`-specific tag.
 
 ## 0.2.0
 - Added a Web UI at `/` to analyze PDFs from a URL or a local Home Assistant path.
