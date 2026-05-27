@@ -1,0 +1,6 @@
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+paddleocr==2.8.1
+pdf2image==1.17.0
+opencv-python-headless==4.11.0.86
+numpy==1.26.4
