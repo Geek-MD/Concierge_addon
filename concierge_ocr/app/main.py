@@ -148,8 +148,6 @@ def _is_public_http_url(pdf_url: str) -> bool:
         return False
     if parsed.hostname.lower() == "localhost":
         return False
-    if parsed.port and parsed.port not in {80, 443}:
-        return False
 
     try:
         resolved = socket.getaddrinfo(parsed.hostname, parsed.port or 443, type=socket.SOCK_STREAM)
@@ -176,32 +174,34 @@ def _is_public_http_url(pdf_url: str) -> bool:
 
 
 def _validate_local_pdf_path(local_path: str) -> Path:
-    requested_path = Path(local_path).expanduser()
+    requested_path = Path(local_path.strip()).expanduser()
 
     if not requested_path.is_absolute():
         raise HTTPException(status_code=400, detail="La ruta local debe ser absoluta")
 
-    try:
-        resolved_path = requested_path.resolve(strict=True)
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail="No se encontró el archivo local") from exc
-
-    if not resolved_path.is_file():
-        raise HTTPException(status_code=400, detail="La ruta local no apunta a un archivo")
-
-    if resolved_path.suffix.lower() != ".pdf":
-        raise HTTPException(status_code=400, detail="La ruta local debe ser un archivo PDF")
-
     if not RESOLVED_LOCAL_BASE_DIRS:
         raise HTTPException(status_code=500, detail="No hay rutas locales permitidas configuradas")
 
-    resolved_path_text = str(resolved_path)
-    if not any(
-        resolved_path_text.startswith(f"{str(base).rstrip('/')}/") for base in RESOLVED_LOCAL_BASE_DIRS
-    ):
-        raise HTTPException(status_code=403, detail="La ruta local no está permitida")
+    for base in RESOLVED_LOCAL_BASE_DIRS:
+        try:
+            relative_path = requested_path.relative_to(base)
+        except ValueError:
+            continue
 
-    return resolved_path
+        try:
+            resolved_path = (base / relative_path).resolve(strict=True)
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail="No se encontró el archivo local") from exc
+
+        if not resolved_path.is_relative_to(base):
+            raise HTTPException(status_code=403, detail="La ruta local no está permitida")
+        if not resolved_path.is_file():
+            raise HTTPException(status_code=400, detail="La ruta local no apunta a un archivo")
+        if resolved_path.suffix.lower() != ".pdf":
+            raise HTTPException(status_code=400, detail="La ruta local debe ser un archivo PDF")
+        return resolved_path
+
+    raise HTTPException(status_code=403, detail="La ruta local no está permitida")
 
 
 async def _fetch_pdf_from_url(pdf_url: str) -> bytes:
