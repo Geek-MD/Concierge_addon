@@ -1,42 +1,42 @@
 # Concierge_addon
 
-Addon para Home Assistant que expone una API REST y una Web UI para analizar PDFs con PaddleOCR y devolver el resultado en JSON.
+Home Assistant add-on that exposes a REST API and a Web UI to analyze PDFs with PaddleOCR and return the result as JSON.
 
-## Estructura
+## Structure
 
-- `repository.yaml`: metadatos del repositorio de addons.
-- `concierge_ocr/`: definición del addon.
-  - `config.yaml`: configuración del addon para Home Assistant.
-  - `Dockerfile`: imagen del addon.
-  - `run.sh`: arranque de la API.
-  - `requirements.txt`: dependencias Python.
-  - `app/main.py`: API REST (`/health`, `/ocr`, `/ocr/source`) y Web UI (`/`).
+- `repository.yaml`: add-on repository metadata.
+- `concierge_ocr/`: add-on definition.
+  - `config.yaml`: Home Assistant add-on configuration.
+  - `Dockerfile`: add-on image.
+  - `run.sh`: API startup script.
+  - `requirements.txt`: Python dependencies.
+  - `app/main.py`: REST API (`/health`, `/ocr`, `/ocr/source`) and Web UI (`/`).
 
-## Uso
+## Usage
 
-1. Añade este repositorio como **Add-on repository** en Home Assistant.
-2. Instala el addon **Concierge OCR API**.
-3. Inicia el addon.
-4. Abre la Web UI desde la pantalla del addon (si habilitas **Show in sidebar** aparecerá en el panel lateral).
-5. Ingresa:
-   - una URL (`http/https`) de un PDF, o
-   - una ruta local en Home Assistant (`/config`, `/share`, `/media`).
-6. Ejecuta el análisis y descarga el JSON si lo necesitas.
+1. Add this repository as an **Add-on repository** in Home Assistant.
+2. Install the **Concierge OCR API** add-on.
+3. Start the add-on.
+4. Open the Web UI from the add-on page. If you enable **Show in sidebar**, it will also appear in the side panel.
+5. Enter:
+   - a PDF URL (`http/https`), or
+   - a local Home Assistant path (`/config`, `/share`, `/media`).
+6. Run the analysis and download the JSON if needed.
 
 ## API REST
 
 ### `POST /ocr`
 
-Envía un PDF por REST:
+Send a PDF over REST:
 
 ```bash
 curl -X POST "http://HOME_ASSISTANT_HOST:8099/ocr" \
-  -F "file=@documento.pdf"
+  -F "file=@document.pdf"
 ```
 
-También se acepta el PDF en el body crudo (`Content-Type: application/pdf`).
+Raw PDF content in the request body is also supported (`Content-Type: application/pdf`).
 
-Respuesta ejemplo:
+Example response:
 
 ```json
 {
@@ -46,21 +46,21 @@ Respuesta ejemplo:
       "page": 1,
       "lines": [
         {
-          "text": "Hola mundo",
+          "text": "Hello world",
           "confidence": 0.99,
           "box": [[0, 0], [100, 0], [100, 20], [0, 20]]
         }
       ],
-      "text": "Hola mundo"
+      "text": "Hello world"
     }
   ],
-  "text": "Hola mundo"
+  "text": "Hello world"
 }
 ```
 
 ### `POST /ocr/source`
 
-Permite procesar el PDF desde origen remoto o local:
+Allows processing a PDF from a remote or local source:
 
-- `source_type=url` y `source_value=https://.../archivo.pdf`
-- `source_type=local_path` y `source_value=/config/archivo.pdf`
+- `source_type=url` and `source_value=https://.../file.pdf`
+- `source_type=local_path` and `source_value=/config/file.pdf`

@@ -1,13 +1,13 @@
 # Changelog
 
 ## 0.2.0
-- Se agregó una Web UI en `/` para analizar PDFs desde URL o ruta local de Home Assistant.
-- Nueva ruta `POST /ocr/source` para procesar PDFs por `source_type` (`url` o `local_path`) y `source_value`.
-- La Web UI muestra el JSON OCR en pantalla y permite descargarlo como archivo `.json`.
-- Se habilitó `ingress` y panel lateral del addon en Home Assistant.
-- Se agregaron mapas de lectura para rutas locales: `/config`, `/share`, `/media`.
+- Added a Web UI at `/` to analyze PDFs from a URL or a local Home Assistant path.
+- Added a new `POST /ocr/source` route to process PDFs using `source_type` (`url` or `local_path`) and `source_value`.
+- The Web UI displays the OCR JSON on screen and allows downloading it as a `.json` file.
+- Enabled add-on ingress and side panel access in Home Assistant.
+- Added read-only mappings for local paths: `/config`, `/share`, `/media`.
 
 ## 0.1.0
-- Scaffold inicial del addon de Home Assistant `concierge_ocr`.
-- API REST con endpoint `POST /ocr` para recibir PDF y devolver OCR en JSON.
-- Integración con PaddleOCR y soporte de idioma configurable (`ocr_lang`).
+- Initial scaffold for the `concierge_ocr` Home Assistant add-on.
+- REST API with a `POST /ocr` endpoint to receive a PDF and return OCR as JSON.
+- PaddleOCR integration with configurable language support (`ocr_lang`).

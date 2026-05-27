@@ -22,7 +22,7 @@ RESOLVED_LOCAL_BASE_DIRS = tuple(
 )
 
 WEB_UI_HTML = """<!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -40,28 +40,28 @@ WEB_UI_HTML = """<!doctype html>
 </head>
 <body>
   <h1>Concierge OCR Web UI</h1>
-  <p>Indica una URL (<code>http/https</code>) o una ruta local montada en Home Assistant (<code>/config</code>, <code>/share</code>, <code>/media</code>).</p>
+  <p>Enter a URL (<code>http/https</code>) or a local path mounted in Home Assistant (<code>/config</code>, <code>/share</code>, <code>/media</code>).</p>
   <form id="ocrForm">
     <div class="row">
-      <label for="sourceType">Tipo de origen</label>
+      <label for="sourceType">Source type</label>
       <select id="sourceType" name="sourceType">
         <option value="url">URL</option>
-        <option value="local_path">Ruta local</option>
+        <option value="local_path">Local path</option>
       </select>
     </div>
     <div class="row">
-      <label for="sourceValue">URL o ruta del PDF</label>
-      <input id="sourceValue" name="sourceValue" placeholder="https://.../archivo.pdf o /config/archivo.pdf" required />
-      <span class="hint">Solo se aceptan archivos PDF.</span>
+      <label for="sourceValue">PDF URL or path</label>
+      <input id="sourceValue" name="sourceValue" placeholder="https://.../file.pdf or /config/file.pdf" required />
+      <span class="hint">Only PDF files are supported.</span>
     </div>
     <div class="actions">
-      <button type="submit">Analizar PDF</button>
-      <button id="downloadBtn" type="button" disabled>Descargar JSON</button>
+      <button type="submit">Analyze PDF</button>
+      <button id="downloadBtn" type="button" disabled>Download JSON</button>
     </div>
   </form>
 
-  <label for="result">Resultado JSON</label>
-  <textarea id="result" readonly placeholder="Aquí aparecerá la respuesta JSON..."></textarea>
+  <label for="result">JSON result</label>
+  <textarea id="result" readonly placeholder="The JSON response will appear here..."></textarea>
 
   <script>
     const form = document.getElementById('ocrForm');
@@ -73,7 +73,7 @@ WEB_UI_HTML = """<!doctype html>
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      result.value = 'Procesando...';
+      result.value = 'Processing...';
       downloadBtn.disabled = true;
       latestJson = null;
 
@@ -85,7 +85,7 @@ WEB_UI_HTML = """<!doctype html>
         const response = await fetch('/ocr/source', { method: 'POST', body: payload });
         const data = await response.json();
         if (!response.ok) {
-          throw new Error(data.detail || 'Error inesperado');
+          throw new Error(data.detail || 'Unexpected error');
         }
         latestJson = data;
         result.value = JSON.stringify(data, null, 2);
@@ -100,7 +100,7 @@ WEB_UI_HTML = """<!doctype html>
       const blob = new Blob([JSON.stringify(latestJson, null, 2)], { type: 'application/json' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = 'ocr_resultado.json';
+      link.download = 'ocr_result.json';
       link.click();
       URL.revokeObjectURL(link.href);
     });
@@ -177,10 +177,10 @@ def _validate_local_pdf_path(local_path: str) -> Path:
     requested_path = Path(local_path.strip()).expanduser()
 
     if not requested_path.is_absolute():
-        raise HTTPException(status_code=400, detail="La ruta local debe ser absoluta")
+        raise HTTPException(status_code=400, detail="The local path must be absolute")
 
     if not RESOLVED_LOCAL_BASE_DIRS:
-        raise HTTPException(status_code=500, detail="No hay rutas locales permitidas configuradas")
+        raise HTTPException(status_code=500, detail="No allowed local paths are configured")
 
     for base in RESOLVED_LOCAL_BASE_DIRS:
         try:
@@ -191,33 +191,33 @@ def _validate_local_pdf_path(local_path: str) -> Path:
         try:
             resolved_path = (base / relative_path).resolve(strict=True)
         except FileNotFoundError as exc:
-            raise HTTPException(status_code=404, detail="No se encontró el archivo local") from exc
+            raise HTTPException(status_code=404, detail="Local file not found") from exc
 
         if not resolved_path.is_relative_to(base):
-            raise HTTPException(status_code=403, detail="La ruta local no está permitida")
+            raise HTTPException(status_code=403, detail="The local path is not allowed")
         if not resolved_path.is_file():
-            raise HTTPException(status_code=400, detail="La ruta local no apunta a un archivo")
+            raise HTTPException(status_code=400, detail="The local path does not point to a file")
         if resolved_path.suffix.lower() != ".pdf":
-            raise HTTPException(status_code=400, detail="La ruta local debe ser un archivo PDF")
+            raise HTTPException(status_code=400, detail="The local path must point to a PDF file")
         return resolved_path
 
-    raise HTTPException(status_code=403, detail="La ruta local no está permitida")
+    raise HTTPException(status_code=403, detail="The local path is not allowed")
 
 
 async def _fetch_pdf_from_url(pdf_url: str) -> bytes:
     if not _is_public_http_url(pdf_url):
-        raise HTTPException(status_code=400, detail="La URL no es válida o segura para descarga")
+        raise HTTPException(status_code=400, detail="The URL is not valid or safe to download")
 
     try:
         async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
             response = await client.get(pdf_url)
             response.raise_for_status()
     except httpx.HTTPError as exc:
-        raise HTTPException(status_code=400, detail=f"No se pudo descargar el PDF: {exc}") from exc
+        raise HTTPException(status_code=400, detail=f"Could not download the PDF: {exc}") from exc
 
     pdf_bytes = response.content
     if not pdf_bytes or not _is_pdf_bytes(pdf_bytes):
-        raise HTTPException(status_code=400, detail="La URL no devolvió un PDF válido")
+        raise HTTPException(status_code=400, detail="The URL did not return a valid PDF")
 
     return pdf_bytes
 
@@ -227,20 +227,20 @@ def _load_local_pdf(local_path: str) -> bytes:
     try:
         return validated_path.read_bytes()
     except OSError as exc:
-        raise HTTPException(status_code=400, detail=f"No se pudo leer el PDF local: {exc}") from exc
+        raise HTTPException(status_code=400, detail=f"Could not read the local PDF: {exc}") from exc
 
 
 def _process_pdf_bytes(pdf_bytes: bytes) -> dict[str, Any]:
     if not pdf_bytes:
-        raise HTTPException(status_code=400, detail="No se recibió un PDF")
+        raise HTTPException(status_code=400, detail="No PDF was received")
 
     if not _is_pdf_bytes(pdf_bytes):
-        raise HTTPException(status_code=400, detail="Contenido inválido: no parece PDF")
+        raise HTTPException(status_code=400, detail="Invalid content: it does not look like a PDF")
 
     try:
         images = convert_from_bytes(pdf_bytes)
     except Exception as exc:  # pragma: no cover
-        raise HTTPException(status_code=400, detail=f"No se pudo procesar el PDF: {exc}") from exc
+        raise HTTPException(status_code=400, detail=f"Could not process the PDF: {exc}") from exc
 
     ocr = get_ocr()
     pages: list[dict[str, Any]] = []
@@ -278,7 +278,7 @@ def health() -> dict[str, str]:
 async def handle_ocr_request(request: Request, file: UploadFile | None = File(default=None)) -> dict[str, Any]:
     if file is not None:
         if not file.filename or not file.filename.lower().endswith(".pdf"):
-            raise HTTPException(status_code=400, detail="El archivo debe ser PDF")
+            raise HTTPException(status_code=400, detail="The uploaded file must be a PDF")
         pdf_bytes = await file.read()
     else:
         pdf_bytes = await request.body()
@@ -295,13 +295,13 @@ async def handle_ocr_source_request(
     normalized_value = source_value.strip()
 
     if not normalized_value:
-        raise HTTPException(status_code=400, detail="Debe indicar una URL o ruta local")
+        raise HTTPException(status_code=400, detail="You must provide a URL or local path")
 
     if normalized_source == "url":
         pdf_bytes = await _fetch_pdf_from_url(normalized_value)
     elif normalized_source == "local_path":
         pdf_bytes = _load_local_pdf(normalized_value)
     else:
-        raise HTTPException(status_code=400, detail="source_type debe ser 'url' o 'local_path'")
+        raise HTTPException(status_code=400, detail="source_type must be 'url' or 'local_path'")
 
     return _process_pdf_bytes(pdf_bytes)
