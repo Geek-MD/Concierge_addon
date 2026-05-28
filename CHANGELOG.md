@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.6
+- Fixed add-on startup crash caused by `paddleocr` importing `paddle` without `paddlepaddle` being installed (`ModuleNotFoundError: No module named 'paddle'`) by adding `paddlepaddle==2.6.2`.
+
+## 0.2.5
+- Fixed add-on startup crash caused by OpenCV native dependency loading (`ImportError: libGL.so.1` / `libgthread-2.0.so.0`) by adding `libgl1` and `libglib2.0-0` to the Debian image packages.
+
 ## 0.2.4
 - Fixed add-on startup crash (`Traceback ... /venv/bin/uvicorn`) by adding the missing `python-multipart` dependency required by FastAPI routes that use `File(...)` and `Form(...)`.
 

@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-venv \
     python3-dev \
     poppler-utils \
+    libgl1 \
+    libglib2.0-0 \
     build-essential \
     cmake \
     ninja-build \
