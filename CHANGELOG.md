@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.4
+- Fixed add-on startup crash (`Traceback ... /venv/bin/uvicorn`) by adding the missing `python-multipart` dependency required by FastAPI routes that use `File(...)` and `Form(...)`.
+
 ## 0.2.3
 - Fixed silent build timeout on aarch64 by switching the base image from Alpine (`base-python:3.12-alpine3.22`) to Debian bookworm (`base-debian:bookworm`). `paddlepaddle` only ships pre-built `manylinux2014_aarch64` wheels (glibc), not Alpine/musl wheels; on Alpine aarch64 pip fell back to a source compilation that hit the HA Supervisor build timeout with no visible error.
 
