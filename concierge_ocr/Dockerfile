@@ -1,25 +1,30 @@
-ARG BUILD_FROM=ghcr.io/home-assistant/base-python:3.12-alpine3.22
+ARG BUILD_FROM=ghcr.io/home-assistant/base-debian:bookworm
 FROM ${BUILD_FROM}
 
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
-RUN apk add --no-cache \
-    poppler-utils \
-    build-base \
-    cmake \
-    ninja \
-    pkgconf \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-venv \
     python3-dev \
-    linux-headers \
+    poppler-utils \
+    build-essential \
+    cmake \
+    ninja-build \
+    pkg-config \
     gfortran \
-    openblas-dev \
-    lapack-dev \
-    freetype-dev \
-    libpng-dev
+    libopenblas-dev \
+    liblapack-dev \
+    libfreetype-dev \
+    libpng-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m venv /venv
+ENV PATH="/venv/bin:$PATH"
 
 COPY requirements.txt /app/requirements.txt
-RUN pip3 install --no-cache-dir -r /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY app /app/app
 COPY run.sh /run.sh
