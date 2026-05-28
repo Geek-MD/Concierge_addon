@@ -8,6 +8,10 @@ The add-on Docker image uses the multi-architecture Home Assistant Debian base i
 This provides a glibc environment so that `paddlepaddle` and other ML dependencies can be installed from pre-built `manylinux` wheels on all supported architectures (including `aarch64`).
 A previous Alpine-based image caused a silent build timeout on aarch64 because `paddlepaddle` has no musl/Alpine wheel and pip fell back to a source compilation that exceeded the HA Supervisor build timeout.
 
+FastAPI endpoints that accept `multipart/form-data` (such as `/ocr` and `/ocr/source`) require `python-multipart`; this dependency is included to avoid startup failures during `uvicorn` boot.
+The image also includes `libgl1` and `libglib2.0-0` so OpenCV can import correctly at startup on Debian-based Home Assistant environments.
+The runtime dependencies explicitly include `paddlepaddle` to ensure `paddleocr` can initialize without startup import errors.
+
 ## Structure
 
 - `repository.yaml`: add-on repository metadata.
