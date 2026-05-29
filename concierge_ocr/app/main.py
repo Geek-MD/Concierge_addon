@@ -85,7 +85,8 @@ WEB_UI_HTML = """<!doctype html>
       payload.append('source_value', sourceValue.value.trim());
 
       try {
-        const endpoint = new URL('ocr/source', window.location.href);
+        const basePath = window.location.pathname.replace(/\/+$/, '');
+        const endpoint = new URL(`${basePath}/ocr/source`, window.location.origin);
         const response = await fetch(endpoint, { method: 'POST', body: payload });
         const data = await response.json();
         if (!response.ok) {
