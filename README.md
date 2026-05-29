@@ -4,9 +4,9 @@
 [![Release](https://img.shields.io/github/v/release/Geek-MD/Concierge_addon.svg)](https://github.com/Geek-MD/Concierge_addon/releases)
 [![Stars](https://img.shields.io/github/stars/Geek-MD/Concierge_addon.svg)](https://github.com/Geek-MD/Concierge_addon/stargazers)
 
-[![Supports aarch64 Architecture](https://img.shields.io/badge/aarch64-yes-green.svg)](https://img.shields.io/badge/aarch64-yes-green.svg)
-[![Supports amd64 Architecture](https://img.shields.io/badge/amd64-yes-green.svg)](https://img.shields.io/badge/amd64-yes-green.svg)
-[![Supports armv7 Architecture](https://img.shields.io/badge/armv7-yes-green.svg)](https://img.shields.io/badge/armv7-yes-green.svg)
+![Supports aarch64 Architecture](https://img.shields.io/badge/aarch64-yes-green.svg)
+![Supports amd64 Architecture](https://img.shields.io/badge/amd64-yes-green.svg)
+![Supports armv7 Architecture](https://img.shields.io/badge/armv7-yes-green.svg)
 
 Home Assistant add-on that exposes a REST API and a Web UI to analyze PDFs with PaddleOCR and return the result as JSON.
 
