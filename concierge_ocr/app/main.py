@@ -13,9 +13,10 @@ from fastapi.responses import HTMLResponse
 from pdf2image import convert_from_bytes
 from paddleocr import PaddleOCR
 
-app = FastAPI(title="Concierge OCR API", version="0.2.0")
+app = FastAPI(title="Concierge OCR API", version="0.2.7")
 
 _OCR_INSTANCE: PaddleOCR | None = None
+HOMEASSISTANT_LOCAL_ALIAS = "homeassistant"
 LOCAL_ALLOWED_BASE_DIRS = tuple(Path(path) for path in os.getenv("LOCAL_PDF_BASE_PATHS", "/config,/share,/media").split(","))
 RESOLVED_LOCAL_BASE_DIRS = tuple(
     path.expanduser().resolve() for path in LOCAL_ALLOWED_BASE_DIRS if path.expanduser().exists()
@@ -40,7 +41,7 @@ WEB_UI_HTML = """<!doctype html>
 </head>
 <body>
   <h1>Concierge OCR Web UI</h1>
-  <p>Enter a URL (<code>http/https</code>) or a local path mounted in Home Assistant (<code>/config</code>, <code>/share</code>, <code>/media</code>).</p>
+  <p>Enter a URL (<code>http/https</code>) or a local path mounted in Home Assistant (<code>/config</code>, <code>/share</code>, <code>/media</code> or <code>/homeassistant</code> as alias of <code>/config</code>).</p>
   <form id="ocrForm">
     <div class="row">
       <label for="sourceType">Source type</label>
@@ -51,7 +52,7 @@ WEB_UI_HTML = """<!doctype html>
     </div>
     <div class="row">
       <label for="sourceValue">PDF URL or path</label>
-      <input id="sourceValue" name="sourceValue" placeholder="https://.../file.pdf or /config/file.pdf" required />
+      <input id="sourceValue" name="sourceValue" placeholder="https://.../file.pdf or /config/file.pdf (/homeassistant/... also supported)" required />
       <span class="hint">Only PDF files are supported.</span>
     </div>
     <div class="actions">
@@ -175,6 +176,13 @@ def _is_public_http_url(pdf_url: str) -> bool:
 
 def _validate_local_pdf_path(local_path: str) -> Path:
     requested_path = Path(local_path.strip()).expanduser()
+
+    if (
+        requested_path.is_absolute()
+        and len(requested_path.parts) > 1
+        and requested_path.parts[1] == HOMEASSISTANT_LOCAL_ALIAS
+    ):
+        requested_path = Path("/config").joinpath(*requested_path.parts[2:])
 
     if not requested_path.is_absolute():
         raise HTTPException(status_code=400, detail="The local path must be absolute")

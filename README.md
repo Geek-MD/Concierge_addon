@@ -31,6 +31,7 @@ The runtime dependencies explicitly include `paddlepaddle` to ensure `paddleocr`
 5. Enter:
    - a PDF URL (`http/https`), or
    - a local Home Assistant path (`/config`, `/share`, `/media`).
+   - If your integration returns `/homeassistant/...`, it is also accepted and treated as an alias for `/config/...`.
 6. Run the analysis and download the JSON if needed.
 
 ## API REST
@@ -74,3 +75,4 @@ Allows processing a PDF from a remote or local source:
 
 - `source_type=url` and `source_value=https://.../file.pdf`
 - `source_type=local_path` and `source_value=/config/file.pdf`
+- `source_type=local_path` and `source_value=/homeassistant/file.pdf` (alias to `/config/file.pdf`)
