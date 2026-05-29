@@ -1,4 +1,5 @@
 import ipaddress
+import logging
 import os
 import socket
 from pathlib import Path
@@ -13,7 +14,8 @@ from fastapi.responses import HTMLResponse
 from pdf2image import convert_from_bytes
 from paddleocr import PaddleOCR
 
-app = FastAPI(title="Concierge OCR API", version="0.2.7")
+app = FastAPI(title="Concierge OCR API", version="0.2.8")
+logger = logging.getLogger("concierge_ocr.api")
 
 _OCR_INSTANCE: PaddleOCR | None = None
 HOMEASSISTANT_LOCAL_ALIAS = "homeassistant"
@@ -83,7 +85,9 @@ WEB_UI_HTML = """<!doctype html>
       payload.append('source_value', sourceValue.value.trim());
 
       try {
-        const response = await fetch('/ocr/source', { method: 'POST', body: payload });
+        const basePath = window.location.pathname.replace(/\/+$/, '');
+        const endpoint = new URL(`${basePath}/ocr/source`, window.location.origin);
+        const response = await fetch(endpoint, { method: 'POST', body: payload });
         const data = await response.json();
         if (!response.ok) {
           throw new Error(data.detail || 'Unexpected error');
@@ -248,6 +252,7 @@ def _process_pdf_bytes(pdf_bytes: bytes) -> dict[str, Any]:
     try:
         images = convert_from_bytes(pdf_bytes)
     except Exception as exc:  # pragma: no cover
+        logger.exception("PDF processing failed while converting bytes to images")
         raise HTTPException(status_code=400, detail=f"Could not process the PDF: {exc}") from exc
 
     ocr = get_ocr()
@@ -284,14 +289,21 @@ def health() -> dict[str, str]:
 
 @app.post("/ocr")
 async def handle_ocr_request(request: Request, file: UploadFile | None = File(default=None)) -> dict[str, Any]:
-    if file is not None:
-        if not file.filename or not file.filename.lower().endswith(".pdf"):
-            raise HTTPException(status_code=400, detail="The uploaded file must be a PDF")
-        pdf_bytes = await file.read()
-    else:
-        pdf_bytes = await request.body()
+    try:
+        if file is not None:
+            if not file.filename or not file.filename.lower().endswith(".pdf"):
+                raise HTTPException(status_code=400, detail="The uploaded file must be a PDF")
+            pdf_bytes = await file.read()
+        else:
+            pdf_bytes = await request.body()
 
-    return _process_pdf_bytes(pdf_bytes)
+        return _process_pdf_bytes(pdf_bytes)
+    except HTTPException as exc:
+        logger.warning("Request to /ocr failed: %s", exc.detail)
+        raise
+    except Exception:
+        logger.exception("Unhandled error in /ocr")
+        raise
 
 
 @app.post("/ocr/source")
@@ -302,14 +314,21 @@ async def handle_ocr_source_request(
     normalized_source = source_type.strip().lower()
     normalized_value = source_value.strip()
 
-    if not normalized_value:
-        raise HTTPException(status_code=400, detail="You must provide a URL or local path")
+    try:
+        if not normalized_value:
+            raise HTTPException(status_code=400, detail="You must provide a URL or local path")
 
-    if normalized_source == "url":
-        pdf_bytes = await _fetch_pdf_from_url(normalized_value)
-    elif normalized_source == "local_path":
-        pdf_bytes = _load_local_pdf(normalized_value)
-    else:
-        raise HTTPException(status_code=400, detail="source_type must be 'url' or 'local_path'")
+        if normalized_source == "url":
+            pdf_bytes = await _fetch_pdf_from_url(normalized_value)
+        elif normalized_source == "local_path":
+            pdf_bytes = _load_local_pdf(normalized_value)
+        else:
+            raise HTTPException(status_code=400, detail="source_type must be 'url' or 'local_path'")
 
-    return _process_pdf_bytes(pdf_bytes)
+        return _process_pdf_bytes(pdf_bytes)
+    except HTTPException as exc:
+        logger.warning("Request to /ocr/source failed: %s (source_type=%s)", exc.detail, normalized_source)
+        raise
+    except Exception:
+        logger.exception("Unhandled error in /ocr/source")
+        raise

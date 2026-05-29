@@ -41,6 +41,7 @@ The runtime dependencies explicitly include `paddlepaddle` to ensure `paddleocr`
    - a local Home Assistant path (`/config`, `/share`, `/media`).
    - If your integration returns `/homeassistant/...`, it is also accepted and treated as an alias for `/config/...`.
 6. Run the analysis and download the JSON if needed.
+7. If an analysis fails, review the add-on logs from Home Assistant; request and PDF processing errors are now logged with diagnostic details.
 
 ## API REST
 
