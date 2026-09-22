@@ -45,6 +45,35 @@ The runtime dependencies explicitly include `paddlepaddle` to ensure `paddleocr`
 7. Run the analysis and download the JSON if needed.
 8. If an analysis fails, review the add-on logs from Home Assistant; request and PDF processing errors are now logged with diagnostic details.
 
+## Troubleshooting incomplete sensor attributes
+
+The Concierge integration can log a warning similar to:
+
+```text
+addon OCR left sensor attributes incomplete for '<file>.pdf'; using internal extractor as fallback
+```
+
+This warning does not mean that the add-on request failed. It means that the add-on
+returned an OCR result, but the integration could not populate every sensor attribute it
+requires from the structured response, so it continued with its built-in PDF extractor.
+Check the resulting sensor state and attributes before treating the message as an error.
+
+An isolated warning normally needs no add-on code change. It can be caused by OCR quality,
+a new statement layout, or a template section or field that did not match. If it happens
+repeatedly for the same document layout:
+
+1. Run the PDF from the add-on Web UI with the same template used by the integration.
+2. Inspect `meta.matched_sections` in the JSON response. A section with `matched: false`,
+   or a required field with a `null` value, identifies the extraction that needs adjustment.
+3. Compare the extracted fields with the final Home Assistant sensor attributes. If the
+   internal fallback filled them, the warning records a recovered degradation; if they are
+   still absent, report the PDF layout (with private data removed), template ID, add-on
+   version, and JSON response.
+
+Do not disable the fallback merely to suppress the warning: it preserves sensor data when
+the OCR/template path is incomplete. A code or template fix is warranted when the warning
+is reproducible and the diagnostic JSON identifies a consistently unmatched or empty field.
+
 ## API REST
 
 ### `POST /ocr`
